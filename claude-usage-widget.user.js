@@ -54,8 +54,9 @@
     style.textContent = `
         #cuw {
             position: fixed;
-            bottom: 2px;
-            right: 10px;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 999999;
             background: #1d2021;
             color: #ebdbb2;
