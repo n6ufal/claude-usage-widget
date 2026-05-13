@@ -4,8 +4,8 @@ A Violentmonkey/Tampermonkey userscript that adds a floating usage monitor to [c
 
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
-<img width="400" height="400" alt="1" src="https://github.com/user-attachments/assets/e9fdd185-8037-4242-bc34-cffe420b8223" />
-<img width="400" height="400" alt="2" src="https://github.com/user-attachments/assets/e1e1df04-7357-47db-b3ef-47357bf610d2" />
+<img width="300" alt="minimized" src="https://github.com/user-attachments/assets/e9fdd185-8037-4242-bc34-cffe420b8223" />
+<img width="300" alt="expanded" src="https://github.com/user-attachments/assets/e1e1df04-7357-47db-b3ef-47357bf610d2" />
 
 
 ## Features
