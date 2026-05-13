@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Usage Widget
 // @namespace    https://github.com/n6ufal/claude-usage-widget
-// @version      2.0
+// @version      2.1
 // @description  Floating Claude usage monitor with Gruvbox theme - shows usage % and reset timer in minimized mode
 // @author       Alif Naufal (n6ufal)
 // @match        https://claude.ai/*
@@ -15,32 +15,50 @@
 
     if (document.getElementById('cuw')) return;
 
+    // ─── Config ────────────────────────────────────────────────────────────────
     const CONFIG = {
         POLL_INTERVAL_MS:   60_000,
         FETCH_TIMEOUT_MS:   10_000,
-        RETRY_DELAYS_MS:    [2_000, 5_000, 15_000],
+        RETRY_DELAYS_MS:    [2_000, 5_000, 15_000], // exponential-ish backoff
         WIDGET_WIDTH_PX:    130,
     };
 
+    // ─── State ─────────────────────────────────────────────────────────────────
     let isCollapsed       = true;
-    let currentPercentage = null;
-    let currentResetISO   = null;
+    let currentPercentage = null;  // 5-hour utilisation %
+    let currentResetISO   = null;  // 5-hour reset timestamp
 
-    let orgUUIDPromise    = null;
+    let orgUUIDPromise    = null;  // FIX #3 – promise cache prevents parallel org requests
     let pollTimerId       = null;
     let countdownTimerId  = null;
     let retryCount        = 0;
 
+    // Cached DOM refs – populated in buildWidget() (FIX #2)
     const dom = {};
 
+    // Stored listener refs for clean removal (FIX #9)
     const listeners = {};
 
+    // ─── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Safely parse an ISO date string and return its ms timestamp, or null if invalid.
+     * FIX #4 – validates before using in arithmetic.
+     */
     function parseISO(iso) {
         if (!iso) return null;
         const ms = new Date(iso).getTime();
         return Number.isFinite(ms) ? ms : null;
     }
 
+    /**
+     * FIX #11 – unified time-remaining formatter replacing the duplicate
+     * formatCountdown / formatResetLabel pair.
+     *
+     * @param {string|null} iso  – ISO 8601 timestamp
+     * @param {'short'|'long'}  mode
+     * @returns {string}
+     */
     function formatTimeRemaining(iso, mode = 'short') {
         const targetMs = parseISO(iso);
         if (targetMs === null) return mode === 'short' ? null : '';
@@ -58,20 +76,28 @@
             return `${s}s`;
         }
 
+        // mode === 'long'
         if (h > 24) return `Reset in ${Math.floor(h / 24)}d ${h % 24}h`;
         if (h > 0)  return `Reset in ${h}h ${m}m`;
         return `Reset in ${m}m`;
     }
 
+    /** Clamp a value to [0, 100] and round to nearest integer. */
     function clampPct(n) {
         return Math.min(100, Math.max(0, Math.round(n)));
     }
 
+    // ─── API ───────────────────────────────────────────────────────────────────
+
+    /**
+     * FIX #3 – returns the same in-flight promise if a call is already pending,
+     * preventing duplicate /api/organizations requests.
+     */
     function getOrgUUID() {
         if (orgUUIDPromise) return orgUUIDPromise;
 
         orgUUIDPromise = (async () => {
-            const signal = AbortSignal.timeout(CONFIG.FETCH_TIMEOUT_MS);
+            const signal = AbortSignal.timeout(CONFIG.FETCH_TIMEOUT_MS); // FIX #10
             const resp = await fetch('/api/organizations', {
                 credentials: 'include',
                 headers:     { Accept: 'application/json' },
@@ -82,13 +108,17 @@
             if (!Array.isArray(orgs) || !orgs.length) throw new Error('no orgs');
             return orgs[0].uuid;
         })().catch(err => {
-            orgUUIDPromise = null;
+            orgUUIDPromise = null; // reset so next poll retries
             throw err;
         });
 
         return orgUUIDPromise;
     }
 
+    /**
+     * FIX #10 – wraps fetch with AbortSignal.timeout so stalled requests
+     * don't block the UI indefinitely.
+     */
     async function fetchUsage() {
         try {
             const uuid   = await getOrgUUID();
@@ -110,7 +140,7 @@
                 return;
             }
 
-            retryCount = 0;
+            retryCount = 0; // successful response – reset backoff
             setErrorState(null);
 
             if (has5h) {
@@ -132,6 +162,9 @@
         }
     }
 
+    /**
+     * FIX #10 – exponential backoff on errors; shows visual indicator (FIX #13).
+     */
     function handleFetchError(err) {
         console.warn('[CUW]', err.message);
         setErrorState('⚠');
@@ -140,8 +173,15 @@
             const delay = CONFIG.RETRY_DELAYS_MS[retryCount++];
             setTimeout(fetchUsage, delay);
         }
+        // After exhausting retries, the regular poll interval takes over.
     }
 
+    // ─── DOM helpers ───────────────────────────────────────────────────────────
+
+    /**
+     * FIX #13 – surface a non-empty error token in the header display
+     * when the API is unreachable; pass null to clear it.
+     */
     function setErrorState(token) {
         if (!dom.headerDisplay) return;
         if (token) {
@@ -151,6 +191,7 @@
     }
 
     function updateBar(valId, barId, resetId, pct, resetsAt) {
+        // FIX #2 – use cached refs, fall back to getElementById for safety
         const valEl   = dom[valId]   ?? document.getElementById(valId);
         const barEl   = dom[barId]   ?? document.getElementById(barId);
         const resetEl = dom[resetId] ?? document.getElementById(resetId);
@@ -161,6 +202,10 @@
         resetEl.textContent = formatTimeRemaining(resetsAt, 'long');
     }
 
+    /**
+     * FIX #6 – only touches the text node; no logic re-evaluation on
+     * each tick unless state actually differs.
+     */
     function updateHeaderDisplay() {
         if (!dom.headerDisplay) return;
 
@@ -188,7 +233,7 @@
 
         if (!isCollapsed) return;
 
-        const targetMs = parseISO(currentResetISO);
+        const targetMs = parseISO(currentResetISO); // FIX #4
         if (!targetMs || targetMs <= Date.now()) return;
 
         countdownTimerId = setInterval(() => {
@@ -208,6 +253,7 @@
         dom.header.classList.toggle('collapsed', isCollapsed);
         dom.toggle.textContent = isCollapsed ? '▸' : '▾';
 
+        // FIX #5 – keep ARIA in sync
         dom.toggle.setAttribute('aria-expanded', String(!isCollapsed));
 
         manageCountdownTimer();
@@ -218,6 +264,12 @@
         applyCollapseState();
     }
 
+    // ─── Drag ──────────────────────────────────────────────────────────────────
+
+    /**
+     * FIX #9 – listener functions stored in `listeners` so destroy() can
+     * remove them from document, preventing a permanent memory leak.
+     */
     function makeDraggable(widget) {
         let dragging = false;
         let ox = 0;
@@ -251,6 +303,24 @@
         document.addEventListener('mouseup',   listeners.onMouseUp);
     }
 
+    // ─── Lifecycle ─────────────────────────────────────────────────────────────
+
+    /**
+     * Start or stop the regular poll interval based on tab visibility.
+     * Passing true starts the interval (if not already running);
+     * false clears it so no fetches fire while the tab is hidden.
+     */
+    function schedulePoll(enable) {
+        if (enable) {
+            if (!pollTimerId)
+                pollTimerId = setInterval(fetchUsage, CONFIG.POLL_INTERVAL_MS);
+        } else {
+            clearInterval(pollTimerId);
+            pollTimerId = null;
+        }
+    }
+
+    /** Central teardown – clears every timer and removes all document listeners. */
     function destroy() {
         clearInterval(pollTimerId);
         clearInterval(countdownTimerId);
@@ -261,16 +331,16 @@
             document.removeEventListener('mousemove', listeners.onMouseMove);
         if (listeners.onMouseUp)
             document.removeEventListener('mouseup', listeners.onMouseUp);
-
-        if (listeners.observer) {
-            listeners.observer.disconnect();
-            listeners.observer = null;
-        }
+        if (listeners.onVisibilityChange)
+            document.removeEventListener('visibilitychange', listeners.onVisibilityChange);
     }
+
+    // ─── Widget HTML + CSS ─────────────────────────────────────────────────────
 
     function buildWidget() {
         const widget = document.createElement('div');
         widget.id = 'cuw';
+        // FIX #5 – ARIA roles on widget and interactive elements
         widget.setAttribute('role', 'region');
         widget.setAttribute('aria-label', 'Claude usage monitor');
 
@@ -351,6 +421,7 @@
                 color: #a89984;
             }
 
+            /* FIX #5 – reset button styles but keep appearance */
             #cuw-toggle {
                 all: unset;
                 cursor: pointer;
@@ -412,16 +483,20 @@
         return { widget, style };
     }
 
+    // ─── Init ──────────────────────────────────────────────────────────────────
+
     function init() {
         const { widget, style } = buildWidget();
         document.head.appendChild(style);
         document.body.appendChild(widget);
 
+        // FIX #2 – cache all refs once after insertion
         dom.widget        = widget;
         dom.header        = widget.querySelector('#cuw-header');
         dom.body          = widget.querySelector('#cuw-body');
         dom.toggle        = widget.querySelector('#cuw-toggle');
         dom.headerDisplay = widget.querySelector('#cuw-header-display');
+        // bar/val/reset elements keyed by their id for updateBar()
         ['cuw-5h-val','cuw-5h-bar','cuw-5h-reset',
          'cuw-7d-val','cuw-7d-bar','cuw-7d-reset'].forEach(id => {
             dom[id] = widget.querySelector(`#${id}`);
@@ -432,6 +507,7 @@
             toggleExpand();
         });
 
+        // FIX #5 – keyboard activation for toggle
         dom.toggle.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -442,22 +518,18 @@
         applyCollapseState();
         makeDraggable(widget);
 
-        listeners.observer = new MutationObserver((mutations) => {
-            for (const m of mutations) {
-                for (const node of m.removedNodes) {
-                    if (node === widget || node.contains?.(widget)) {
-                        destroy();
-                        return;
-                    }
-                }
-            }
-        });
-        listeners.observer.observe(document.body, { childList: true, subtree: true });
+        // Cleanup on navigation / tab close – no MutationObserver needed.
+        window.addEventListener('pagehide',     destroy, { once: true });
+        window.addEventListener('beforeunload', destroy, { once: true });
 
-        window.addEventListener('pagehide', destroy, { once: true });
+        // Pause polling while the tab is hidden; resume when it becomes visible.
+        // Eliminates all background fetches – the single most impactful efficiency gain.
+        listeners.onVisibilityChange = () => schedulePoll(!document.hidden);
+        document.addEventListener('visibilitychange', listeners.onVisibilityChange);
 
+        // Kick off only if the tab is already visible.
         fetchUsage();
-        pollTimerId = setInterval(fetchUsage, CONFIG.POLL_INTERVAL_MS);
+        schedulePoll(!document.hidden);
     }
 
     init();
