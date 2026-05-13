@@ -12,8 +12,6 @@ A Violentmonkey/Tampermonkey userscript that adds a floating usage monitor to [c
 
 - Minimized view: displays current usage percentage and time remaining until reset
 - Expanded view: shows full 5-hour and 7-day usage bars with reset countdowns
-- Live countdown updates every second
-- Color-coded indicators for urgency levels (green → yellow → orange → red)
 - Draggable widget
 - Displays `API?` notification if the usage endpoint structure changes
 
