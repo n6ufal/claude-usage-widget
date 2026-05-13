@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Usage Widget
 // @namespace    https://github.com/n6ufal/claude-usage-widget
-// @version      1
+// @version      1.1
 // @description  Floating Claude usage monitor with Gruvbox theme - shows usage % and reset timer in minimized mode
 // @author       Alif Naufal (n6ufal)
 // @match        https://claude.ai/*
@@ -16,7 +16,6 @@
     if (document.getElementById('cuw')) return;
 
     const CHECK_INTERVAL_MS = 60000;
-    const COLOR = '#a89984';
 
     let orgUUID = null;
     let countdownInterval = null;
@@ -24,8 +23,6 @@
     let currentPercentage = null;
     let isCollapsed = true;
     let fetchIntervalId = null;
-
-    // ── Widget markup ────────────────────────────────────────────────────────
 
     const widget = document.createElement('div');
     widget.id = 'cuw';
@@ -150,8 +147,6 @@
         }
     `;
 
-    // ── Formatting ───────────────────────────────────────────────────────────
-
     function formatCountdown(iso) {
         if (!iso) return null;
         const diff = new Date(iso).getTime() - Date.now();
@@ -175,8 +170,6 @@
         return `Reset in ${m}m`;
     }
 
-    // ── Header display ───────────────────────────────────────────────────────
-
     function updateHeaderDisplay() {
         const el = document.getElementById('cuw-header-display');
         if (!el) return;
@@ -199,8 +192,6 @@
             el.textContent = '—';
         }
     }
-
-    // ── Countdown ticker ─────────────────────────────────────────────────────
 
     function manageCountdownTimer() {
         if (countdownInterval) {
@@ -227,8 +218,6 @@
         }, 1000);
     }
 
-    // ── Collapse / expand ────────────────────────────────────────────────────
-
     function applyCollapseState() {
         const body   = document.getElementById('cuw-body');
         const header = document.getElementById('cuw-header');
@@ -252,8 +241,6 @@
         applyCollapseState();
     }
 
-    // ── Bar row updater ──────────────────────────────────────────────────────
-
     function updateBar(valId, barId, resetId, utilization, resetsAt) {
         const valEl   = document.getElementById(valId);
         const barEl   = document.getElementById(barId);
@@ -265,8 +252,6 @@
         barEl.style.width   = pct + '%';
         resetEl.textContent = formatResetLabel(resetsAt);
     }
-
-    // ── API ──────────────────────────────────────────────────────────────────
 
     async function getOrgUUID() {
         if (orgUUID) return orgUUID;
@@ -324,8 +309,6 @@
         }
     }
 
-    // ── Drag ─────────────────────────────────────────────────────────────────
-
     function makeDraggable() {
         const header = document.getElementById('cuw-header');
         if (!header) return;
@@ -335,6 +318,8 @@
             if (e.target.id === 'cuw-toggle') return;
             dragging = true;
             const r = widget.getBoundingClientRect();
+            widget.style.left = r.left + 'px';
+            widget.style.transform = 'none';
             ox = e.clientX - r.left;
             oy = e.clientY - r.top;
             widget.style.cursor = 'grabbing';
@@ -352,8 +337,6 @@
             if (dragging) { dragging = false; widget.style.cursor = ''; }
         });
     }
-
-    // ── Init ─────────────────────────────────────────────────────────────────
 
     function init() {
         document.head.appendChild(style);
