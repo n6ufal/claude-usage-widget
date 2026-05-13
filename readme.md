@@ -2,12 +2,16 @@
 
 A Violentmonkey/Tampermonkey userscript that adds a floating usage monitor to [claude.ai](https://claude.ai). Displays your 5-hour and 7-day usage limits with a live countdown timer.
 
-![License](https://img.shields.io/badge/license-AGPL--3.0-blue?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+
+<img width="400" height="400" alt="1" src="https://github.com/user-attachments/assets/e9fdd185-8037-4242-bc34-cffe420b8223" />
+<img width="400" height="400" alt="2" src="https://github.com/user-attachments/assets/e1e1df04-7357-47db-b3ef-47357bf610d2" />
+
 
 ## Features
 
-- **Minimized view:** displays current usage percentage and time remaining until reset
-- **Expanded view:** shows full 5-hour and 7-day usage bars with reset countdowns
+- Minimized view: displays current usage percentage and time remaining until reset
+- Expanded view: shows full 5-hour and 7-day usage bars with reset countdowns
 - Live countdown updates every second
 - Color-coded indicators for urgency levels (green → yellow → orange → red)
 - Draggable widget
@@ -34,4 +38,4 @@ Open the link above with Violentmonkey or Tampermonkey active, and it will promp
 
 ## License
 
-[AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html)
+[MIT](https://opensource.org/licenses/MIT)
