@@ -1,41 +1,39 @@
 # claude-usage-widget
 
-A Violentmonkey/Tampermonkey userscript that adds a floating usage monitor to [claude.ai](https://claude.ai). Displays your 5-hour and 7-day usage limits with a live countdown timer.
+A browser userscript that adds a small floating widget to [claude.ai](https://claude.ai) showing how much of your usage limit you've spent — with a live countdown until it resets.
 
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
 <img width="300" alt="minimized" src="https://github.com/user-attachments/assets/e9fdd185-8037-4242-bc34-cffe420b8223" />
 <img width="300" alt="expanded" src="https://github.com/user-attachments/assets/e1e1df04-7357-47db-b3ef-47357bf610d2" />
 
-## Features
+## What it does
 
-- Minimized view: displays current usage percentage and time remaining until reset
-- Expanded view: shows full 5-hour and 7-day usage bars with reset countdowns
-- Draggable widget
-- Polls only while the tab is visible — pauses automatically when the tab is hidden and resumes on focus, so no background requests are made across multiple open tabs
-- Displays `API?` if the usage endpoint structure changes, and `⚠` on network error with automatic retry
-- Fetch requests are capped at a 10-second timeout with exponential backoff on failure
+- Shows your current usage as a percentage with a timer counting down to reset
+- Expand it to see separate bars for your 5-hour and 7-day limits
+- Only checks for updates when you're actually on the tab — no background activity if you have Claude open in multiple tabs
+- Shows a warning icon if there's a network issue, and retries automatically
 
 ## Installation
 
-**One-click install:**
+**Easy install (recommended):**
 
+Open this link with Violentmonkey or Tampermonkey installed — it'll prompt you to install automatically:
 [claude-usage-widget.user.js](https://raw.githubusercontent.com/n6ufal/claude-usage-widget/main/claude-usage-widget.user.js)
 
-Open the link above with Violentmonkey or Tampermonkey active, and it will prompt you to install automatically.
+> Don't have a userscript manager? Install [Violentmonkey](https://violentmonkey.github.io) or [Tampermonkey](https://www.tampermonkey.net) for your browser first, then come back to the link above.
 
-**Manual installation:**
+**Manual install:**
 
-1. Open your userscript manager dashboard
-2. Create a new script
-3. Paste the contents of `claude-usage-widget.user.js`
-4. Save and refresh [claude.ai](https://claude.ai)
+1. Open your userscript manager and create a new script
+2. Paste in the contents of `claude-usage-widget.user.js`
+3. Save, then refresh [claude.ai](https://claude.ai)
 
 ## Notes
 
-- Uses Claude's internal `/api/organizations/{uuid}/usage` endpoint, which is undocumented and may change without notice.
-- All data remains in your browser. Requests use your existing claude.ai session.
-- Compatible with both free and paid plans.
+- Uses an internal Claude API endpoint that isn't officially documented, so it could break if Anthropic changes their backend. The widget will show `API?` if that happens.
+- Everything runs locally in your browser. No data leaves your machine — it just reads from your existing Claude session.
+- Works on both free and paid plans.
 
 ## License
 
