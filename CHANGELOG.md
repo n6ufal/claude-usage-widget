@@ -1,5 +1,27 @@
 # Changelog
 
+## [3.0] - 2026-05-16
+
+### Changed
+- Switched license from MIT to GPL-3.0 to comply with incorporated GPL-3.0 code
+- Replaced fetch engine with adapted logic from "Claude Inline Usage Tracker" by Niko
+  - Cleaner org UUID caching via shared state object
+  - In-flight promise reuse prevents duplicate concurrent requests
+  - MIN_GAP (15s) deduplication skips redundant fetches on rapid calls
+  - Self-healing setTimeout poll loop replaces setInterval — self-suspends when tab is hidden
+  - Hover-to-refresh triggers a fetch when mousing over the widget (30s minimum gap)
+- Replaced pagehide/pageshow lifecycle fix with pushState/replaceState monkey-patch
+  - Correctly detects SPA navigation on Claude.ai where pagehide does not reliably fire
+  - Also handles popstate and hashchange for back/forward navigation
+
+### Removed
+- MutationObserver — not needed for a fixed floating widget
+- Anchor hunting logic (findAnchor, attach, scheduleAttach) — inline mounting not applicable
+- pagehide/pageshow listeners from v2.2
+
+### Added
+- Credit block in script header attributing Niko's original engine
+
 ## [2.2] - 2026-05-16
 
 ### Fixed
