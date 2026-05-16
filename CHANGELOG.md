@@ -1,8 +1,20 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## [2.2] - 2026-05-16
 
----
+### Fixed
+- Widget freezing after SPA navigation without a full page reload. Claude.ai
+  navigates via pushState which fires `pagehide`, previously interpreted as
+  tab close and used to trigger full teardown. Poll timers were permanently
+  killed; the widget remained visible but stopped updating.
+
+### Changed
+- `pagehide` now suspends polling only (`schedulePoll(false)`) instead of
+  calling `destroy()`.
+- Added `pageshow` listener: resumes polling and fires an immediate fetch so
+  data is current on return without waiting up to 60s for the next interval.
+- `beforeunload` remains the sole trigger for full teardown (timer and
+  listener cleanup), scoped to actual tab/window close only.
 
 ## [2.1.0] - 2026-05-14
 
