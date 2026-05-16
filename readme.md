@@ -2,7 +2,7 @@
 
 A browser userscript that adds a small floating widget to [claude.ai](https://claude.ai) showing how much of your usage limit you've spent — with a live countdown until it resets.
 
-![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)
 
 <img width="300" alt="minimized" src="https://github.com/user-attachments/assets/e9fdd185-8037-4242-bc34-cffe420b8223" />
 <img width="300" alt="expanded" src="https://github.com/user-attachments/assets/e1e1df04-7357-47db-b3ef-47357bf610d2" />
@@ -35,6 +35,14 @@ Open this link with Violentmonkey or Tampermonkey installed — it'll prompt you
 - Everything runs locally in your browser. No data leaves your machine — it just reads from your existing Claude session.
 - Works on both free and paid plans.
 
+## Credits
+
+Fetch engine, poll logic, and SPA navigation hooks adapted from
+[Claude Inline Usage Tracker](https://update.greasyfork.org/scripts/567949) by Niko,
+licensed under [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html).
+
+This project is also licensed under GPL-3.0 as a result.
+
 ## License
 
-[MIT](https://opensource.org/licenses/MIT)
+[GPL-3.0](./LICENSE)
