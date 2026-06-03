@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.1] - 2026-06-03
+
+### Changed
+- Progress bars now use `transform: scaleX()` instead of `width` — avoids layout on every poll cycle, GPU-composited
+- Added `contain: layout style paint` to `#cuw` to isolate widget from page reflow/paint scope
+
 ## [3.0] - 2026-05-16
 
 ### Changed

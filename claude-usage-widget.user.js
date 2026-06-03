@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Usage Widget
 // @namespace    https://github.com/n6ufal/claude-usage-widget
-// @version      3.0
+// @version      3.1
 // @description  Floating Claude usage monitor with Gruvbox theme - shows usage % and reset timer in minimized mode
 // @author       Alif Naufal (n6ufal)
 // @match        https://claude.ai/*
