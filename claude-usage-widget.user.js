@@ -193,7 +193,8 @@
 
         const pStr = pct + '%';
         if (valEl.textContent !== pStr) valEl.textContent = pStr;
-        if (barEl.style.width !== pStr) barEl.style.width = pStr;
+        const sx = 'scaleX(' + (pct / 100) + ')';
+        if (barEl.style.transform !== sx) barEl.style.transform = sx;
 
         const rStr = formatTimeRemaining(resetsAt, 'long');
         if (resetEl.textContent !== rStr) resetEl.textContent = rStr;
@@ -318,6 +319,7 @@
                 left: 50%;
                 transform: translateX(-50%);
                 z-index: 999999;
+                contain: layout style paint;
                 background: #1d2021;
                 color: #ebdbb2;
                 border: 1px solid #928374;
@@ -401,10 +403,12 @@
             }
             .cuw-fill {
                 height: 100%;
-                width: 0%;
+                width: 100%;
                 background: #a89984;
                 border-radius: 3px;
-                transition: width .5s ease;
+                transform: scaleX(0);
+                transform-origin: left;
+                transition: transform .5s ease;
             }
             .cuw-reset {
                 font-size: 9px;
